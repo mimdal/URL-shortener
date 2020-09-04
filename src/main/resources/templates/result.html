@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Submission result</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+</head>
+<body>
+<h1>URL Submission result</h1>
+<div>
+    <p><b>orginal link: </b><span th:text="${urlObject.longURL}"></span></p>
+    <p><b>short link: </b><span th:text="${urlObject.shortUrl}"></span></p>
+    <p>
+        <span th:with="baseUrl=(${urlObject.shortUrl})">
+            <a th:href="@{${baseUrl}}"> click here</a>
+        </span>
+    </p>
+</div>
+
+</body>
+</html>
