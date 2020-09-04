@@ -13,4 +13,5 @@ out/
 /bootstrap
 /dependencies.xml
 .java-version
-.db
+# h2 database files
+*.db
