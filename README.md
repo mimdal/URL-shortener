@@ -26,11 +26,11 @@ java -jar URL-shortener-${version}.jar
 ``` 
 
 ## Technologies/Tools used
-spring boot
-maven: for automate build
-swagger: for API document
-lombok: to reduce boilerplate code. (eg. getter-setter-builder-tostring)
-h2: in memory database
+- spring boot
+- maven: for automate build
+- swagger: for API document
+- lombok: to reduce boilerplate code. (eg. getter-setter-builder-tostring)
+- h2: in memory database
 
 
 ## Backend Section
