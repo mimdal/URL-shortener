@@ -42,6 +42,7 @@ public class URLServiceImpl implements URLService {
         Optional<String> shortURL = checkLongURLAndReturnShortURL(newLink);
         if (shortURL.isPresent()) {
             isExistBefore = true;
+            logger.debug("the link was registered before. link= {}", newLink.getLongURL());
             generatedShortURL = shortURL.get();
         } else {
             URLEntity entity = generateRandomURLAndCheckUniqueness();
@@ -91,6 +92,8 @@ public class URLServiceImpl implements URLService {
         if (queryResult.isPresent()) {
             URLEntity findEntity = queryResult.get();
             longURL = findEntity.getLongURL();
+            logger.debug("Link counter increment process. shortLink({}) was visited {} times before the last.",
+                    shortLink, findEntity.getCounter());
             findEntity.setCounter(queryResult.get().getCounter() + 1);
             urlRepository.save(findEntity);
         }

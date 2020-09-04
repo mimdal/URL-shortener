@@ -29,7 +29,7 @@ public class ServiceController {
     @ApiOperation(value = "generate a shorted link.")
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "OK", response = String.class),
-            @ApiResponse(code = 409, message = "CONFLICT", response = String.class),
+            @ApiResponse(code = 208, message = "Resource is exist", response = String.class),
             @ApiResponse(code = 500, message = "internal error"),
             @ApiResponse(code = 400, message = "bad request")})
     @PostMapping(
