@@ -1,0 +1,116 @@
+pipeline {
+    agent any
+    stages {
+        stage('Pre Build') {
+            steps {
+                script {
+                    if (env.RELEASE_VERSION) {
+                        env.IS_RELEASED = 'true'
+                        echo 'check project dependencies has no SNAPSHOT dependency'
+                        pomFile = readFile 'pom.xml'
+                        def hasSnapShotVersion = (pomFile =~ '<\\w*.version>(.+?-SNAPSHOT)</*.version>')
+                        if (hasSnapShotVersion) {
+                            error ("At least one dependency with SNAPSHOT version was Found!")
+                        }
+                    } else {
+                        env.IS_RELEASED = 'false'
+                    }
+                    echo env.RELEASE_STAR_PRINT + ' IS_RELEASED = ' + env.IS_RELEASED + ' ' + env.RELEASE_STAR_PRINT
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                withMaven(
+                        maven: 'maven-3',
+                        jdk: 'JDK_8_162'
+                ) {
+                    bat "mvn clean install -T 4"
+                    echo env.RELEASE_STAR_PRINT + ' Build completed ' + env.RELEASE_STAR_PRINT
+                }
+            }
+        }
+
+        stage('Release') {
+            when {
+                environment name: 'IS_RELEASED', value: 'true'
+            }
+            steps {
+                withMaven(
+                        maven: 'maven-3',
+                        jdk: 'JDK_8_162'
+                ) {
+                    bat "mvn release:clean"
+                    bat "mvn -Dresume=false -DskipTests -Darguments=-DskipTests release:prepare release:perform -DreleaseVersion=%RELEASE_VERSION% -DdevelopmentVersion=%DEVELOPMENT_VERSION% -T 4"
+                    echo env.RELEASE_STAR_PRINT + ' Release completed ' + env.RELEASE_STAR_PRINT
+                }
+            }
+        }
+
+        stage('Push Image') {
+        when {
+                environment name: 'IS_RELEASED', value: 'true'
+              }
+        steps {
+            container('dind') {
+              configFileProvider([configFile(fileId: 'MAVEN_SETTINGS_XML', variable: 'MAVEN_SETTINGS')]) {
+                bat "mvn -s $MAVEN_SETTINGS -f ./${project}/pom.xml -X jib:build -Ddocker.repo=$DOCKER_REPO"
+                echo env.RELEASE_STAR_PRINT + ' Push Image completed ' + env.RELEASE_STAR_PRINT
+              }
+          }
+        }
+      }
+
+        stage('Send Email Notification') {
+            when {
+                environment name: 'IS_RELEASED', value: 'true'
+            }
+            steps {
+                mail body: "URL-shortener version $RELEASE_VERSION is released.",
+                        cc: "${env.DEVELOPER_EMAILS} ${env.RELEASE_NOTIFICATION_MAILS}", from: 'jenkins@company-domain.com',
+                        charset: 'UTF-8', subject: "${env.JOB_NAME} version \"$RELEASE_VERSION\" is released.",
+                        mimeType: 'text/html', to: "${env.SCRUMS_MASTERS_EMAILS}"
+                echo env.RELEASE_STAR_PRINT + ' Release Email was Sent ' + env.RELEASE_STAR_PRINT
+            }
+        }
+
+        stage('SonarQube Report') {
+            when {
+                environment name: 'SONAR_QUBE_REPORT', value: 'true'
+            }
+            steps {
+                echo env.RELEASE_STAR_PRINT + ' SONAR_QUBE_REPORT value = true ' + env.RELEASE_STAR_PRINT
+                withSonarQubeEnv('Sonar') {
+                    withMaven(jdk: 'JDK_8_162', maven: 'maven-3') {
+                        bat 'mvn sonar:sonar'
+                    }
+                }
+                echo env.RELEASE_STAR_PRINT + ' SonarQube Report successfully generated. ' + env.RELEASE_STAR_PRINT
+            }
+        }
+    }
+
+    post {
+        // always { }
+        success {
+            fileOperations([fileDeleteOperation(includes: '*/target/*')])
+            echo env.RELEASE_STAR_PRINT + ' Workspace cleanup completed ' + env.RELEASE_STAR_PRINT
+        }
+        failure {
+            mail body: "Build failed in Jenkins: ${env.JOB_NAME} #${env.BUILD_NUMBER}<br>Build Number: ${env.BUILD_NUMBER} <br> ${env.JOB_NAME}: ${env.BUILD_URL}",
+                    charset: 'UTF-8', from: 'jenkins@company-domain.com', mimeType: 'text/html',
+                    subject: "Build failed in Jenkins: ${env.JOB_NAME} #${env.BUILD_NUMBER}", to: "${env.DEVELOPER_EMAILS}"
+        }
+        // unstable { }
+        changed {
+            script {
+                if (currentBuild.currentResult.toString() == 'SUCCESS') {
+                    mail body: "${env.JOB_NAME}: ${env.BUILD_URL}", charset: 'UTF-8', from: 'jenkins@company-domain.com',
+                            mimeType: 'text/html', subject: "Jenkins build is back to normal : ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                            to: "${env.DEVELOPER_EMAILS}"
+                }
+            }
+        }
+    }
+}
