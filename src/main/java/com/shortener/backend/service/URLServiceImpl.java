@@ -1,7 +1,8 @@
 package com.shortener.backend.service;
 
 import com.shortener.backend.business.ShortURLConstruction;
-import com.shortener.backend.dto.*;
+import com.shortener.backend.dto.RegisterLinkRequestDto;
+import com.shortener.backend.dto.RegisterLinkResponseDto;
 import com.shortener.backend.entity.URLEntity;
 import com.shortener.backend.repository.URLRepository;
 import org.slf4j.Logger;

@@ -1,6 +1,7 @@
 package com.shortener.backend.service;
 
-import com.shortener.backend.dto.*;
+import com.shortener.backend.dto.RegisterLinkRequestDto;
+import com.shortener.backend.dto.RegisterLinkResponseDto;
 
 /**
  * @author M.dehghan

@@ -1,6 +1,8 @@
 package com.shortener.frontend.dto;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.ToString;
 
 /**
  * @author M.dehghan

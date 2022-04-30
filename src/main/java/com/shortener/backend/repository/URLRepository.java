@@ -1,7 +1,7 @@
 package com.shortener.backend.repository;
 
 import com.shortener.backend.entity.URLEntity;
-import org.springframework.data.jpa.repository.*;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * @author M.dehghan
